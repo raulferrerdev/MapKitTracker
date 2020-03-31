@@ -13,12 +13,14 @@ class ViewController: UIViewController {
     
     private let mapView = MKMapView(frame: .zero)
     private let locationManager = CLLocationManager()
+    private let rangeInMeters: Double = 10000
 
 
     override func viewDidLoad() {
         super.viewDidLoad()
                 
         layoutUI()
+        checkLocationServices()
     }
 
     
@@ -52,7 +54,7 @@ class ViewController: UIViewController {
         switch CLLocationManager.authorizationStatus() {
         case .authorizedWhenInUse:
             mapView.showsUserLocation = true
-            centerViewOnUserLocation()
+            centerViewOnUser()
             locationManager.startUpdatingLocation()
             break
         case .denied:
@@ -69,6 +71,16 @@ class ViewController: UIViewController {
             break
         }
     }
+    
+    
+    private func centerViewOnUser() {
+        if let location = locationManager.location?.coordinate {
+            let coordinateRegion = MKCoordinateRegion.init(center: location,
+                                                           latitudinalMeters: rangeInMeters,
+                                                           longitudinalMeters: rangeInMeters)
+            mapView.setRegion(coordinateRegion, animated: true)
+        }
+    }
 }
 
 
@@ -80,8 +92,11 @@ extension ViewController: CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
-        let region = MKCoordinateRegion.init(center: location.coordinate, latitudinalMeters: regionInMeters, longitudinalMeters: regionInMeters)
-        mapView.setRegion(region, animated: true)
+        let coordinateRegion = MKCoordinateRegion.init(center: location.coordinate,
+                                             latitudinalMeters: rangeInMeters,
+                                             longitudinalMeters: rangeInMeters)
+        
+        mapView.setRegion(coordinateRegion, animated: true)
     }
 }
 
