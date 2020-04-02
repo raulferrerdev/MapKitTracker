@@ -13,7 +13,7 @@ class ViewController: UIViewController {
     
     private let mapView = MKMapView(frame: .zero)
     private let locationManager = CLLocationManager()
-    private let rangeInMeters: Double = 10000
+    private let rangeInMeters: Double = 2000
 
 
     override func viewDidLoad() {
@@ -52,7 +52,7 @@ class ViewController: UIViewController {
     
     private func checkAuthorizationForLocation() {
         switch CLLocationManager.authorizationStatus() {
-        case .authorizedWhenInUse:
+        case .authorizedWhenInUse, .authorizedAlways:
             mapView.showsUserLocation = true
             centerViewOnUser()
             locationManager.startUpdatingLocation()
@@ -65,8 +65,6 @@ class ViewController: UIViewController {
         case .restricted:
             // Here we must tell user that the app is not authorize to use location services
             break
-        case .authorizedAlways:
-            break
         @unknown default:
             break
         }
@@ -74,12 +72,11 @@ class ViewController: UIViewController {
     
     
     private func centerViewOnUser() {
-        if let location = locationManager.location?.coordinate {
-            let coordinateRegion = MKCoordinateRegion.init(center: location,
-                                                           latitudinalMeters: rangeInMeters,
-                                                           longitudinalMeters: rangeInMeters)
-            mapView.setRegion(coordinateRegion, animated: true)
-        }
+        guard let location = locationManager.location?.coordinate else { return }
+        let coordinateRegion = MKCoordinateRegion.init(center: location,
+                                                       latitudinalMeters: rangeInMeters,
+                                                       longitudinalMeters: rangeInMeters)
+        mapView.setRegion(coordinateRegion, animated: true)
     }
 }
 
@@ -93,8 +90,8 @@ extension ViewController: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         let coordinateRegion = MKCoordinateRegion.init(center: location.coordinate,
-                                             latitudinalMeters: rangeInMeters,
-                                             longitudinalMeters: rangeInMeters)
+                                                       latitudinalMeters: rangeInMeters,
+                                                       longitudinalMeters: rangeInMeters)
         
         mapView.setRegion(coordinateRegion, animated: true)
     }
