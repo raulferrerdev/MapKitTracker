@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "FABButton",
+        "repositoryURL": "https://github.com/raulferrerdev/FABButton.git",
+        "state": {
+          "branch": "master",
+          "revision": "5d78a3cb48b78dc73f05e558426fe900ac34e33c",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}

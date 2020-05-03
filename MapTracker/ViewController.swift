@@ -8,16 +8,18 @@
 
 import UIKit
 import MapKit
+import FABButton
 
 class ViewController: UIViewController {
     
     private let mapView = MKMapView(frame: .zero)
     private let locationManager = CLLocationManager()
     private let rangeInMeters: Double = 500
-    private let mapTypecontroller = UISegmentedControl(items: ["Standard", "Satellite", "Hybrid"])
     private let pointer = UIImageView(image: UIImage(systemName: "mappin"))
     private let addressLabel = UILabel(frame: .zero)
     private let geoCoder = CLGeocoder()
+    private let mapTypeButton = FABView(buttonImage: UIImage(named: "earth"))
+    private let startButton = UIButton(frame: .zero)
     
     private var previousLocation: CLLocation?
 
@@ -26,15 +28,28 @@ class ViewController: UIViewController {
         
         configureAddressLabel()
         layoutUI()
-        configureMapTypeController()
+        configureMapTypeButton()
+        configureStartButton()
         checkLocationServices()
     }
     
     
-    private func configureMapTypeController() {
-        mapTypecontroller.selectedSegmentIndex = 0
-        mapView.mapType = .standard
-        mapTypecontroller.addTarget(self, action: #selector(indexChanged(_:)), for: .valueChanged)
+    private func configureMapTypeButton() {
+        mapTypeButton.delegate = self
+
+        mapTypeButton.addSecondaryButtonWith(image: UIImage(named: "map")!, labelTitle: "Standard", action: {
+            self.mapView.mapType = .mutedStandard
+        })
+        
+        mapTypeButton.addSecondaryButtonWith(image: UIImage(named: "satellite")!, labelTitle: "Satellite", action: {
+            self.mapView.mapType = .satellite
+        })
+        
+        mapTypeButton.addSecondaryButtonWith(image: UIImage(named: "hybrid")!, labelTitle: "Hybrid", action: {
+            self.mapView.mapType = .hybrid
+        })
+        
+        mapTypeButton.setFABButton()
     }
     
     
@@ -49,31 +64,29 @@ class ViewController: UIViewController {
     }
     
     
-    @objc private func indexChanged(_ sender: UISegmentedControl) {
-        switch sender.selectedSegmentIndex{
-        case 0:
-            mapView.mapType = .mutedStandard
-        case 1:
-            mapView.mapType = .satellite
-        case 2:
-            mapView.mapType = .hybrid
-        default:
-            break
-        }
+    private func configureStartButton() {
+        startButton.translatesAutoresizingMaskIntoConstraints = false
+        startButton.setTitle("Start", for: .normal)
+        startButton.backgroundColor = .systemRed
+        startButton.setTitleColor(.white, for: .normal)
+        startButton.titleLabel?.font = .systemFont(ofSize: 18.0, weight: .bold)
+        startButton.layer.cornerRadius = 5.0
+        startButton.clipsToBounds = true
+        startButton.addTarget(self, action: #selector(drawRoutes), for: .touchUpInside)
     }
 
     
     private func layoutUI() {
         mapView.delegate = self
         mapView.translatesAutoresizingMaskIntoConstraints = false
-        mapTypecontroller.translatesAutoresizingMaskIntoConstraints = false
         pointer.translatesAutoresizingMaskIntoConstraints = false
-        pointer.tintColor = .systemRed
+        pointer.tintColor = .red
         
         view.addSubview(mapView)
-        view.addSubview(mapTypecontroller)
+        view.addSubview(mapTypeButton)
         view.addSubview(pointer)
         view.addSubview(addressLabel)
+        view.addSubview(startButton)
         
         NSLayoutConstraint.activate([
             mapView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -86,14 +99,18 @@ class ViewController: UIViewController {
             addressLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -5),
             addressLabel.heightAnchor.constraint(equalToConstant: 40),
 
-            mapTypecontroller.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -40),
-            mapTypecontroller.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            mapTypecontroller.widthAnchor.constraint(equalToConstant: 300),
-            
+            mapTypeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -5),
+            mapTypeButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -40),
+
             pointer.centerYAnchor.constraint(equalTo: mapView.centerYAnchor, constant: -14.5),
             pointer.centerXAnchor.constraint(equalTo: mapView.centerXAnchor),
             pointer.widthAnchor.constraint(equalToConstant: 27),
-            pointer.heightAnchor.constraint(equalToConstant: 29)
+            pointer.heightAnchor.constraint(equalToConstant: 29),
+            
+            startButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 5),
+            startButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -40),
+            startButton.widthAnchor.constraint(equalToConstant: 100),
+            startButton.heightAnchor.constraint(equalToConstant: 40)
         ])
     }
     
@@ -145,6 +162,37 @@ class ViewController: UIViewController {
         let coordinates = mapView.centerCoordinate
         return CLLocation(latitude: coordinates.latitude, longitude: coordinates.longitude)
     }
+    
+    
+    @objc func drawRoutes() {
+        guard let request = createRequest() else { return }
+        let directions = MKDirections(request: request)
+        mapView.removeOverlays(mapView.overlays)
+
+        directions.calculate { [unowned self] (response, error) in
+            guard let response = response else { return }
+            let routes = response.routes
+            for route in routes {
+                self.mapView.addOverlay(route.polyline)
+                self.mapView.setVisibleMapRect(route.polyline.boundingMapRect, animated: true)
+            }
+        }
+    }
+    
+    
+    func createRequest() -> MKDirections.Request? {
+        guard let coordinate = locationManager.location?.coordinate else { return nil }
+        let destinationCoordinate = getCenterLocation(for: mapView).coordinate
+        let origin = MKPlacemark(coordinate: coordinate)
+        let destination = MKPlacemark(coordinate: destinationCoordinate)
+        let request = MKDirections.Request()
+        request.source = MKMapItem(placemark: origin)
+        request.destination = MKMapItem(placemark: destination)
+        request.transportType = .automobile
+        request.requestsAlternateRoutes = true
+        
+        return request
+    }
 }
 
 
@@ -163,7 +211,7 @@ extension ViewController: MKMapViewDelegate {
             center.distance(from: previousLocation) > 25 else { return }
         
         self.previousLocation = center
-        
+
         geoCoder.reverseGeocodeLocation(center) { [weak self] (placemarks, error) in
             guard let self = self else { return }
             
@@ -183,5 +231,19 @@ extension ViewController: MKMapViewDelegate {
             }
         }
     }
+    
+    
+    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        let renderer = MKPolylineRenderer(overlay: overlay as! MKPolyline)
+        renderer.strokeColor = .green
+        renderer.lineWidth = 5
+        return renderer
+    }
 }
 
+
+extension ViewController: FABSecondaryButtonDelegate {
+    func secondaryActionForButton(_ action: @escaping () -> ()) {
+        action()
+    }
+}

@@ -3,10 +3,11 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		948D1FEF245AAA8D003329BE /* FABButton in Frameworks */ = {isa = PBXBuildFile; productRef = 948D1FEE245AAA8D003329BE /* FABButton */; };
 		94C18AEC2433A87500A30D69 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C18AEB2433A87500A30D69 /* AppDelegate.swift */; };
 		94C18AEE2433A87500A30D69 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C18AED2433A87500A30D69 /* SceneDelegate.swift */; };
 		94C18AF02433A87500A30D69 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94C18AEF2433A87500A30D69 /* ViewController.swift */; };
@@ -31,6 +32,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				948D1FEF245AAA8D003329BE /* FABButton in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,6 +85,9 @@
 			dependencies = (
 			);
 			name = MapTracker;
+			packageProductDependencies = (
+				948D1FEE245AAA8D003329BE /* FABButton */,
+			);
 			productName = MapTracker;
 			productReference = 94C18AE82433A87500A30D69 /* MapTracker.app */;
 			productType = "com.apple.product-type.application";
@@ -111,6 +116,9 @@
 				Base,
 			);
 			mainGroup = 94C18ADF2433A87500A30D69;
+			packageReferences = (
+				948D1FED245AAA8D003329BE /* XCRemoteSwiftPackageReference "FABButton" */,
+			);
 			productRefGroup = 94C18AE92433A87500A30D69 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -340,6 +348,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		948D1FED245AAA8D003329BE /* XCRemoteSwiftPackageReference "FABButton" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/raulferrerdev/FABButton.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		948D1FEE245AAA8D003329BE /* FABButton */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 948D1FED245AAA8D003329BE /* XCRemoteSwiftPackageReference "FABButton" */;
+			productName = FABButton;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 94C18AE02433A87500A30D69 /* Project object */;
 }
